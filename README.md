@@ -1,7 +1,7 @@
 # WINLocator
 ## Summary
 
-![](docs/assets/WINlocator_overview.png)
+![](docs/assets/WINLocator_overview.png)
  
 * Tool to do hypocenter location from associated phases by WIN system (Urabe and Tsukada, 1992).
 * Easy to run on various OS by using **docker**.
