@@ -21,6 +21,7 @@ Detailed usage for WINLocator
     -Vertical compornent: EW,E,X,VX <br>
     -Horizontal compornent 1: NS,N,Y,VY <br>
     -Horizontal compornent 2: UD,U,Z,VZ
+  * **"Voltage amplification ratio (column [12])" is modified to the int value.**
   * NIED provides channel table at the same time when downloading WIN waveform files. <br>
     For the detailed information, see https://hinetwww11.bosai.go.jp/auth/download/cont/?LANG=en
   * Put the file as `WINLocator/etc/stn.tbl`. <br>
