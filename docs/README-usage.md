@@ -2,9 +2,13 @@
 Detailed usage for WINLocator
 
 ## What is the output?
-* hypocenter location result file: `data/win/yymmdd.hhmmss-xxx`
+* hypocenter location result file (win pickfile): `data/win/yymmdd.hhmmss-xxx`
   * format: win pickfile format <br>
-    For the detailed information, see https://wwweic.eri.u-tokyo.ac.jp/WIN/man.en/pickfile.html 
+    For the detailed information, see https://wwweic.eri.u-tokyo.ac.jp/WIN/man.en/pickfile.html.
+
+* hypocenter location result file (json): `data/picks_located.json`
+  * format: json format <br>
+    Event and pick information from "win pickfile".
 
 ## How to use
 ### 1. Input file preparation

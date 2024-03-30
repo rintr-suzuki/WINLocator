@@ -61,7 +61,7 @@ class EventInfo(object):
 
                 self.picks.append(pick)
                 
-        elif type == "win": # todo
+        elif type == "win":
             # read
             ## event
             ### first line of #f
@@ -117,8 +117,8 @@ class EventInfo(object):
             # self.event["rinit"] = float(event[4][13].strip('%'))
 
             ### last line of #f
-            self.event["stdPResidual"] = float(event[5][1])
-            self.event["stdSResidual"] = float(event[5][2])
+            self.event["stdPResidual"] = float(event[5][9])
+            self.event["stdSResidual"] = float(event[5][12])
 
             ## picks
             ### sixth line and beyond of #f (except of last line)
@@ -158,7 +158,7 @@ class EventInfo(object):
                     spick["emergent_deg"] = float(rawpick[5])
                     spick["incident_deg"] = float(rawpick[6])
 
-                    spick["type"] = 'p'
+                    spick["type"] = 's'
 
                     spick_timestamp_dt = event_timestamp_dt \
                         - datetime.timedelta(seconds=float(self.event["second"])) + datetime.timedelta(seconds=spick["time"])

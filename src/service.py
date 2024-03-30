@@ -55,18 +55,45 @@ class WINLocator(object):
             j = 0; event = []; picks = []
             for win in win_meta:
                 if win.startswith('#f'):
+                    ## set size
                     if j <= 4:
-                        event.append(win.split())
+                        if j == 0:
+                            sizes = [3, 3, 3, 3, 6, 3, 8, 11, 11, 8, 6]
+                        elif j == 1:
+                            sizes = [3, 7, 19, 9, 11, 10]
+                        elif j == 2:
+                            sizes = [3, 10, 10, 10, 10, 10, 10]
+                        elif j == 3:
+                            sizes = [3, 19, 6, 8, 6, 8, 6]
+                        elif j == 4:
+                            sizes = [3, 5, 5, 4, 2, 6, 2, 4, 2, 6, 2, 4, 2, 6, 2]
+                        flag = True
                     else:
-                        picks.append(win.split())
+                        sizes = [3, 10, 2, 9, 6, 6, 6, 7, 6, 7, 7, 6, 7, 10, 5]
+                        flag = False
+
+                    ## cut string
+                    k = 0; meta = []
+                    for size in sizes:
+                        meta.append(win[k:k+size].rstrip().lstrip())
+                        k += size
+                        
+                    ## append to list
+                    if flag:
+                        event.append(meta)
+                    else:
+                        picks.append(meta)
+
                     j += 1
-            else:
+            
+            # if located
+            if len(event) != 0:
                 # add standard deviation of picks to event info
                 event.append(picks[-1])
                 picks.pop()
 
-            # convert to json format
-            eventInfoList.append(EventInfo(i, event, picks, "win"))
+                # convert to json format
+                eventInfoList.append(EventInfo(i, event, picks, "win"))
 
         # write json
         meta = [eventInfo.toJson() for eventInfo in eventInfoList]
