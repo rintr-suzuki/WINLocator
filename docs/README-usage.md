@@ -6,9 +6,11 @@ Detailed usage for WINLocator
   * format: win pickfile format <br>
     For the detailed information, see https://wwweic.eri.u-tokyo.ac.jp/WIN/man.en/pickfile.html.
 
-* hypocenter location result file (json): `data/picks_located.json`
-  * format: json format <br>
+* hypocenter location result file (csv, json, txt): `data/picks_located.xxx`
+  * format: csv, json or txt format <br>
     Event and pick information from "win pickfile".
+  * Csv and txt format has the minimum information to identify the hypocenter, while json format has all of "win pickfile" information, including pick information.
+  * You can choose one or more format to output with `--format` option (default: csv only).
 
 ## How to use
 ### 1. Input file preparation
@@ -42,7 +44,8 @@ Detailed usage for WINLocator
 
   | Option | Description |
   | --- | --- |
-  | `[--infile INFILE]` | path of input associated-picks json file |
+  | `--infile INFILE` | path of input associated-picks json file |
+  | `[--format FORMAT]` | output format, multiple specifications separated by commas (default: csv) |
 
 * Use `-h` option for the detailed information of all other options.
 
@@ -50,9 +53,9 @@ Detailed usage for WINLocator
 ```
 # Pull docker image (only once), run the 'hypomh' container and then execute WINLocator on the container environment. *1
 # Stop and delete the container environment after execution is complete.
-$ ./WINLocator.bash --infile INFILE
+$ ./WINLocator.bash --infile INFILE [--format FORMAT]
 # e.g. 
-# $ ./WINLocator.bash --infile data/associated_picks.json
+# $ ./WINLocator.bash --infile data/associated_picks.json --format txt,json
 
 # You can find the output of WINLocator in '<dirname of infile>' directory.
 ```

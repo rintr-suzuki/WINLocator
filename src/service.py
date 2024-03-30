@@ -1,5 +1,6 @@
 import os
 import json
+import pandas as pd
 import subprocess as sp
 
 from model_event import EventInfo
@@ -20,9 +21,9 @@ class EventConverter(object):
 class WINLocator(object):
     def __init__(self, eventConverter, config):
         self.master = config.master
-        self.eventInfoList = eventConverter.eventInfoList
+        self.eventInfoList0 = eventConverter.eventInfoList
 
-        self.file = [[eventInfo.event_index, eventInfo.winpickFname] for eventInfo in self.eventInfoList]
+        self.file = [[eventInfo.event_index, eventInfo.winpickFname] for eventInfo in self.eventInfoList0]
         self.prmfile = config.prmfile
         
     def __locateOne(self, baseFname):
@@ -42,9 +43,9 @@ class WINLocator(object):
             baseFname = os.path.basename(fname)
             self. __locateOne(baseFname)
 
-    def convert2json(self, n):
+    def convert2dict(self, n):
         # make EventInfo instance
-        eventInfoList = []
+        self.eventInfoList = []
         for onefile in self.file:
             i = onefile[0] # event idx of input EventInfo
             fname = onefile[1]
@@ -93,11 +94,29 @@ class WINLocator(object):
                 picks.pop()
 
                 # convert to json format
-                eventInfoList.append(EventInfo(i, event, picks, "win"))
-
+                self.eventInfoList.append(EventInfo(i, event, picks, "win"))
+        
+    def convert2json(self, n):
         # write json
-        meta = [eventInfo.toJson() for eventInfo in eventInfoList]
+        meta = [eventInfo.toJson() for eventInfo in self.eventInfoList]
         outfile = os.path.join(self.master.outdir, "picks_located.json")
 
         with open(outfile, 'w') as f:
             json.dump(meta, f, indent=2)
+
+    def convert2csv(self, format, n):
+        # load json
+        meta = [eventInfo.toJson() for eventInfo in self.eventInfoList]
+
+        data = []
+        data += [[event['index'], event['eventInfo']['timestamp'], event['eventInfo']['lat'], event['eventInfo']['lon'], event['eventInfo']['dep'], event['eventInfo']['mag']] for event in meta]
+
+        df = pd.DataFrame(data, columns=['index', 'timestamp', 'lat', 'lon', 'dep', 'mag']).set_index('index')
+
+        # write
+        if format == "csv":
+            outfile = os.path.join(self.master.outdir, "picks_located.csv")
+            df.to_csv(outfile, sep=",", header=True, index=True)
+        elif format == "txt":
+            outfile = os.path.join(self.master.outdir, "picks_located.txt")
+            df.to_csv(outfile, sep=" ", header=False, index=False)

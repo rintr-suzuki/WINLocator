@@ -4,13 +4,14 @@ from master import MasterConfig, MasterProcess, Config
 from service import EventConverter, WINLocator
 
 def read_args():
-    tp1 = lambda x:list(map(float, x.split(',')))
+    tp1 = lambda x:x.split(',')
     parser = argparse.ArgumentParser()
 
     # dir information
     parser.add_argument('--infile', help='path of input associated-picks json file')
 
     parser.add_argument('--outdir', help='path of output directory (default: dirname of infile)')
+    parser.add_argument('--format', type=tp1, default=['csv'], help='output format, multiple specifications separated by commas (default: csv)')
 
     # channel table of station code
     parser.add_argument('--chtbl', default='etc/stn.tbl', help='channel table')
@@ -63,7 +64,17 @@ def main(params):
 
         winLocator = WINLocator(eventConverter, config)
         winLocator.locate()
-        winLocator.convert2json(n)
+
+        winLocator.convert2dict(n)
+
+        if 'csv' in masterConfig.format:
+            winLocator.convert2csv('csv', n)
+
+        if 'json' in masterConfig.format:
+            winLocator.convert2json(n)
+
+        if 'txt' in masterConfig.format:
+            winLocator.convert2csv('txt', n)
 
     # remove tmp file
     masterProcess.rm_tmp()

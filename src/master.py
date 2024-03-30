@@ -30,6 +30,12 @@ class MasterConfig(object):
         stntbl.screeningTbl(self.tmpdir)
 
         self.stntbl = stntbl
+
+        # set format
+        for format in self.format:
+            if format not in ['csv', 'json', 'txt']:
+                print("[Error: invalid format]:", format)
+                exit(1)
             
         # ## set stntbl
         # self.stnlstData = read_stnlst(self.stnlst)
