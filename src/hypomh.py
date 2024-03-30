@@ -63,7 +63,7 @@ def main(params):
 
         winLocator = WINLocator(eventConverter, config)
         winLocator.locate()
-        # winLocator.convert2json(n) # todo
+        winLocator.convert2json(n)
 
     # remove tmp file
     masterProcess.rm_tmp()

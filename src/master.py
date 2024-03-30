@@ -16,11 +16,11 @@ class MasterConfig(object):
         self.tmpdir = ".tmp"
         os.makedirs(self.tmpdir, exist_ok=True)
 
-        outdirname = "win"
+        windirname = "win"
         if self.outdir is None:
             self.outdir = os.path.dirname(self.infile)
-        self.outdir = os.path.join(self.outdir, outdirname)
-        os.makedirs(self.outdir, exist_ok=True)
+        self.windir = os.path.join(self.outdir, windirname)
+        os.makedirs(self.windir, exist_ok=True)
 
         ## set locating program
         self.locator = "hypomh"
@@ -47,7 +47,7 @@ class Config(object):
         lines.append("") #/* default directory for data file */
         lines.append(self.master.chtbl) #/* channel table */
         lines.append("") #/* zone file */
-        lines.append(self.master.outdir) #/* picks directory */
+        lines.append(self.master.windir) #/* picks directory */
         lines.append(self.master.locator) #/* hypomh program */	
         lines.append(self.master.velfile) #/* structure model */
         lines.append("") #/* map file */

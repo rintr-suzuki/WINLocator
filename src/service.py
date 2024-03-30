@@ -1,6 +1,5 @@
 import os
 import json
-import glob
 import subprocess as sp
 
 from model_event import EventInfo
@@ -16,12 +15,14 @@ class EventConverter(object):
 
     def convertFromJson(self):
         for eventInfo in self.eventInfoList:
-            eventInfo.toWinpick(self.master.outdir, self.master.stntbl)
-        self.files = glob.glob(os.path.join(self.master.outdir, '*'))
+            eventInfo.toWinpick(self.master.windir, self.master.stntbl)
 
 class WINLocator(object):
     def __init__(self, eventConverter, config):
-        self.files = eventConverter.files
+        self.master = config.master
+        self.eventInfoList = eventConverter.eventInfoList
+
+        self.file = [[eventInfo.event_index, eventInfo.winpickFname] for eventInfo in self.eventInfoList]
         self.prmfile = config.prmfile
         
     def __locateOne(self, baseFname):
@@ -36,46 +37,40 @@ class WINLocator(object):
         print("[WINLocator.locate]: win", out)
 
     def locate(self):
-        for fname in self.files:
+        for onefile in self.file:
+            fname = onefile[1]
             baseFname = os.path.basename(fname)
             self. __locateOne(baseFname)
 
-    # def convert2json(self, n):
-    #     # winファイルを順にwith文で読み込んで、行を一要素としたリストとして、event, picksに格納していく
-    #     # それ以上の操作はmodel_event.pyで行う
+    def convert2json(self, n):
+        # make EventInfo instance
+        eventInfoList = []
+        for onefile in self.file:
+            i = onefile[0] # event idx of input EventInfo
+            fname = onefile[1]
+            # read txt
+            with open(fname) as f:
+                win_meta = [line.rstrip().lstrip() for line in f.readlines()]
 
-    #     # make EventInfo instance
-    #     eventInfoList = []
-    #     for i, winrawfile in enumerate(self.files):
-    #         # read txt
-    #         with open(events_rawfile) as f:
-    #             events_meta = [line.rstrip().lstrip() for line in f.readlines()]
+            j = 0; event = []; picks = []
+            for win in win_meta:
+                if win.startswith('#f'):
+                    if j <= 4:
+                        event.append(win.split())
+                    else:
+                        picks.append(win.split())
+                    j += 1
+            else:
+                # add standard deviation of picks to event info
+                event.append(picks[-1])
+                picks.pop()
 
-    #         i = 1; picks_meta = []; picks_onemeta = []
-    #         with open(picks_rawfile) as f:
-    #             for pick_meta in f:
-    #                 pick_meta = pick_meta.rstrip().lstrip()
-    #                 if pick_meta in events_meta:
-    #                     # if line is event info
-    #                     if len(picks_onemeta) != 0:
-    #                         # if previous event has one or more picks
-    #                         picks_meta.append(picks_onemeta)
-    #                         i += 1
-    #                     picks_onemeta = []
-    #                 else:
-    #                     # if line is pick info
-    #                     picks_onemeta.append(pick_meta)
-    #             else:
-    #                 # if line is end
-    #                 if len(picks_onemeta) != 0:
-    #                     # if last event has one or more picks
-    #                     picks_meta.append(picks_onemeta)
+            # convert to json format
+            eventInfoList.append(EventInfo(i, event, picks, "win"))
 
-    #         eventInfoList.append(EventInfo(i+1, event, picks, "win"))
+        # write json
+        meta = [eventInfo.toJson() for eventInfo in eventInfoList]
+        outfile = os.path.join(self.master.outdir, "picks_located.json")
 
-    #     # write json
-    #     meta = [eventInfo.toJson() for eventInfo in eventInfoList]
-    #     outfile = os.path.join(self.outdir, "picks_located.json") # outdirはwindirと分けないといけない(master.pyなどを修正する必要あり)
-
-    #     with open(outfile, 'w') as f:
-    #         json.dump(meta, f, indent=2)
+        with open(outfile, 'w') as f:
+            json.dump(meta, f, indent=2)

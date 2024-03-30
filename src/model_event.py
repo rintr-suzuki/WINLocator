@@ -62,7 +62,114 @@ class EventInfo(object):
                 self.picks.append(pick)
                 
         elif type == "win": # todo
-            self.event = event; self.picks = picks
+            # read
+            ## event
+            ### first line of #f
+            self.event["year"] = event[0][1]
+            self.event["month"] = event[0][2]
+            self.event["day"] = event[0][3]
+
+            self.event["hour"] = event[0][4].zfill(2)
+            self.event["minute"] = event[0][5]
+            self.event["second"] = event[0][6]
+
+            event_timestamp_str = self.event["year"] + self.event["month"] + self.event["day"] + " " \
+                + self.event["hour"] + self.event["minute"] + self.event["second"]
+            event_timestamp_dt = datetime.datetime.strptime(event_timestamp_str, '%y%m%d %H%M%S.%f')
+            self.event["timestamp"] = event_timestamp_dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+
+            self.event["lat"] = float(event[0][7])
+            self.event["lon"] = float(event[0][8])
+            self.event["dep"] = float(event[0][9])
+            self.event["mag"] = float(event[0][10])
+
+            ### second line of #f
+            self.event["diagnosis"] = event[1][1]
+            # self.event["dtimestamp"] = float(event[1][2])
+            self.event["dlat"] = float(event[1][3])
+            self.event["dlon"] = float(event[1][4])
+            self.event["ddep"] = float(event[1][5])
+
+            ### third line of #f
+            self.event["cxx"] = float(event[2][1])
+            self.event["cxy"] = float(event[2][2])
+            self.event["cxz"] = float(event[2][3])
+            self.event["cyy"] = float(event[2][4])
+            self.event["cyz"] = float(event[2][5])
+            self.event["czz"] = float(event[2][6])
+
+            ### fourth line of #f
+            self.event["ilat"] = float(event[3][1])
+            self.event["idlat"] = float(event[3][2])
+            self.event["ilon"] = float(event[3][3])
+            self.event["idlon"] = float(event[3][4])
+            self.event["idep"] = float(event[3][5])
+            self.event["iddep"] = float(event[3][6])
+
+            ### fifth line of #f
+            self.event["nPorS"] = int(event[4][1])
+            self.event["structure"] = event[4][2]
+            self.event["nP"] = int(event[4][3])
+            # self.event["rP"] = float(event[4][5].strip('%'))
+            self.event["nS"] = int(event[4][7])
+            # self.event["rS"] = float(event[4][9].strip('%'))
+            self.event["ninit"] = int(event[4][11])
+            # self.event["rinit"] = float(event[4][13].strip('%'))
+
+            ### last line of #f
+            self.event["stdPResidual"] = float(event[5][1])
+            self.event["stdSResidual"] = float(event[5][2])
+
+            ## picks
+            ### sixth line and beyond of #f (except of last line)
+            for rawpick in picks:
+                ppick = {}; spick = {}
+                ppick["time"] = float(rawpick[7])
+                spick["time"] = float(rawpick[10])
+
+                if ppick["time"] > float(self.event["second"]):
+                    ppick["id"] = rawpick[1]
+                    ppick["pol"] = rawpick[2]
+
+                    ppick["dist"] = float(rawpick[3])
+                    ppick["azimuth_deg"] = float(rawpick[4])
+                    ppick["emergent_deg"] = float(rawpick[5])
+                    ppick["incident_deg"] = float(rawpick[6])
+
+                    ppick["type"] = 'p'
+
+                    ppick_timestamp_dt = event_timestamp_dt \
+                        - datetime.timedelta(seconds=float(self.event["second"])) + datetime.timedelta(seconds=ppick["time"])
+                    ppick["timestamp"] = ppick_timestamp_dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+
+                    ppick["accuracy"] = float(rawpick[8])
+                    ppick["residual"] = float(rawpick[9])
+
+                    ppick["amp"] = float(rawpick[13])
+                    ppick["mag"] = float(rawpick[14])
+                    self.picks.append(ppick)
+
+                if float(spick["time"]) > float(self.event["second"]):
+                    spick["id"] = rawpick[1]
+                    spick["pol"] = rawpick[2]
+
+                    spick["dist"] = float(rawpick[3])
+                    spick["azimuth_deg"] = float(rawpick[4])
+                    spick["emergent_deg"] = float(rawpick[5])
+                    spick["incident_deg"] = float(rawpick[6])
+
+                    spick["type"] = 'p'
+
+                    spick_timestamp_dt = event_timestamp_dt \
+                        - datetime.timedelta(seconds=float(self.event["second"])) + datetime.timedelta(seconds=spick["time"])
+                    spick["timestamp"] = spick_timestamp_dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+
+                    spick["accuracy"] = float(rawpick[11])
+                    spick["residual"] = float(rawpick[12])
+
+                    spick["amp"] = float(rawpick[13])
+                    spick["mag"] = float(rawpick[14])
+                    self.picks.append(spick)
 
         elif type == "json":
             self.event = event; self.picks = picks
@@ -142,15 +249,16 @@ class EventInfo(object):
                 i += 1
             else:
                 break
+        self.winpickFname = fname
 
-        # first line
+        # first line of #p
         p1 = ' '.join(['#p', t1, str(idx), 'auto']) + '\n'
 
-        # second line
+        # second line of #p
         t2 = datetime.datetime.strptime(ev["timestamp"], "%Y-%m-%dT%H:%M:%S.%f").strftime("%y %m %d %H %M %S")
         p2 = ' '.join(['#p', t2]) + '\n'
 
-        # third line and beyond
+        # third line and beyond of #p
         p3_values = []
         for id in stations:
             picks_id = [pick for pick in picks if pick["id"] == id]
