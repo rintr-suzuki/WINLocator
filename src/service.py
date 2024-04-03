@@ -109,9 +109,13 @@ class WINLocator(object):
         meta = [eventInfo.toJson() for eventInfo in self.eventInfoList]
 
         data = []
-        data += [[event['index'], event['eventInfo']['timestamp'], event['eventInfo']['lat'], event['eventInfo']['lon'], event['eventInfo']['dep'], event['eventInfo']['mag']] for event in meta]
+        data += [[event['index'], event['eventInfo']['timestamp'], \
+                  event['eventInfo']['lat'], event['eventInfo']['dlat'], \
+                  event['eventInfo']['lon'], event['eventInfo']['dlon'], \
+                  event['eventInfo']['dep'], event['eventInfo']['dlat'], \
+                  event['eventInfo']['mag']] for event in meta]
 
-        df = pd.DataFrame(data, columns=['index', 'timestamp', 'lat', 'lon', 'dep', 'mag']).set_index('index')
+        df = pd.DataFrame(data, columns=['index', 'timestamp', 'lat', 'dlat', 'lon', 'dlon', 'dep', 'ddep', 'mag']).set_index('index')
 
         # write
         if format == "csv":
