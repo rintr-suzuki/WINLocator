@@ -3,6 +3,17 @@ import argparse
 from master import MasterConfig, MasterProcess, Config
 from service import EventConverter, WINLocator
 
+def tp2(arg):
+    parts = arg.split(',')
+    result = []
+    for part in parts:
+        values = list(map(int, part.split('-')))
+        result.append(values)
+
+    if len(result) <= 1:
+        result = result[0]
+    return result
+
 def read_args():
     tp1 = lambda x:x.split(',')
     parser = argparse.ArgumentParser()
@@ -19,7 +30,7 @@ def read_args():
 
     # # param for hypo limitation
     # parser.add_argument('--min_merge', type=float, default=5, help='min_merge: default=3[sec]')
-    # parser.add_argument('--p_res_pick', type=tp1, default=[5, 1], help='minimum residuals of the P-wave travel time residuals: default=5(for first drop),1(for second drop and after)[sec]')
+    parser.add_argument('--res', type=tp2, default=[[5, 10], [1, 2]], help='minimum residuals of the P-wave travel time residuals: default=5(for first drop),1(for second drop and after)[sec]')
     # parser.add_argument('--s_res_pick', type=tp1, default=[10, 2], help='minimum residuals of the S-wave travel time residuals: default=10(for first drop),2(for second drop and after)[sec]')
 
     # # default is from Tamaribuchi et al., 2021
