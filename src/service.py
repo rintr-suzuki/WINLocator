@@ -7,24 +7,40 @@ from model_event import EventInfo
 
 class EventConverter(object):
     def __init__(self, config):
-        self.master = config.master
+        self.master = config
 
-        with open(self.master.infile) as f:
-            meta = json.load(f)
+    def convertFromJson(self, config, winLocator):
+        # set config
+        ## itr
+        n = config.n
 
-        self.eventInfoList = [EventInfo(eventInfo["index"], eventInfo["eventInfo"], eventInfo["picksInfo"], "json") for eventInfo in meta]
+        ## output
+        # file_day = config.file_day
+        out_dir = config.out_dir
 
-    def convertFromJson(self):
+        # read input
+        if n-1 >= 0:
+            self.eventInfoList = winLocator.eventInfoLists[n-1]
+            ##### filter bad associated pick #####
+
+        else:
+            self.infile = self.master.infile
+            with open(self.infile) as f:
+                meta = json.load(f)
+
+            self.eventInfoList = [EventInfo(eventInfo["index"], eventInfo["eventInfo"], eventInfo["picksInfo"], "json") for eventInfo in meta]
+
+        # write picks
         for eventInfo in self.eventInfoList:
-            eventInfo.toWinpick(self.master.windir, self.master.stntbl)
+            eventInfo.toWinpick(out_dir, self.master.stntbl)
 
 class WINLocator(object):
-    def __init__(self, eventConverter, config):
-        self.master = config.master
-        self.eventInfoList0 = eventConverter.eventInfoList
+    def __init__(self, config):
+        self.master = config
+        self.outdir = self.master.outdir
 
-        self.file = [[eventInfo.event_index, eventInfo.winpickFname] for eventInfo in self.eventInfoList0]
-        self.prmfile = config.prmfile
+        self.eventInfoLists = []
+        self.meta = []
         
     def __locateOne(self, baseFname):
         com = "win" \
@@ -37,15 +53,21 @@ class WINLocator(object):
         out = proc.stdout.decode("utf8")
         print("[WINLocator.locate]: win", out)
 
-    def locate(self):
+    def locate(self, config, eventConverter):
+        # read input
+        self.eventInfoList0 = eventConverter.eventInfoList
+        self.file = [[eventInfo.event_index, eventInfo.winpickFname] for eventInfo in self.eventInfoList0]
+        self.prmfile = config.prmfile
+
+        # locate
         for onefile in self.file:
             fname = onefile[1]
             baseFname = os.path.basename(fname)
             self. __locateOne(baseFname)
 
-    def convert2dict(self, n):
+    def __convert2dict(self):
         # make EventInfo instance
-        self.eventInfoList = []
+        eventInfoList = []
         for onefile in self.file:
             i = onefile[0] # event idx of input EventInfo
             fname = onefile[1]
@@ -94,20 +116,59 @@ class WINLocator(object):
                 picks.pop()
 
                 # convert to json format
-                self.eventInfoList.append(EventInfo(i, event, picks, "win"))
+                eventInfoList.append(EventInfo(i, event, picks, "win"))
+        self.eventInfoLists.append(eventInfoList)
         
-    def convert2json(self, n):
+    def convert2json(self, config, mkEachJson=False):
+        ## itr
+        n = config.n
+
+        # convert to dict
+        self.__convert2dict()
+
         # write json
-        meta = [eventInfo.toJson() for eventInfo in self.eventInfoList]
-        outfile = os.path.join(self.master.outdir, "picks_located.json")
+        ## add to meta
+        metaone = [eventInfo.toJson() for eventInfo in self.eventInfoLists[n]]
+        self.meta.append(metaone)
 
-        with open(outfile, 'w') as f:
-            json.dump(meta, f, indent=2)
+        ## write output
+        if mkEachJson:
+            self.writeJson(n=config.n, format=self.master.format)
 
-    def convert2csv(self, format, n):
-        # load json
-        meta = [eventInfo.toJson() for eventInfo in self.eventInfoList]
+        self.writeJson(format=self.master.format)
 
+    def writeJson(self, n=-1, format=['csv']):
+        # select meta
+        ## write each
+        if n >= 0:
+            outfilebase = "picks_located-%s" % n
+            outmeta = self.meta[n]
+
+        ## write final
+        elif n == -1:
+            outfilebase = "picks_located"
+            outmeta = self.meta[-1]
+
+        # write in each format
+        if 'csv' in format:
+            outfile = os.path.join(self.outdir, outfilebase + ".csv")
+            
+            df = self.__extractInfo(outmeta)
+            df.to_csv(outfile, sep=",", header=True, index=True)
+
+        if 'json' in format:
+            outfile = os.path.join(self.outdir, outfilebase + ".json")
+
+            with open(outfile, 'w') as f:
+                json.dump(outmeta, f, indent=2)
+
+        if 'txt' in format:
+            outfile = os.path.join(self.outdir, outfilebase + ".txt")
+            
+            df = self.__extractInfo(outmeta)
+            df.to_csv(outfile, sep=" ", header=False, index=False)
+
+    def __extractInfo(self, meta):
         data = []
         data += [[event['index'], event['eventInfo']['timestamp'], \
                   event['eventInfo']['lat'], event['eventInfo']['dlat'], \
@@ -116,11 +177,4 @@ class WINLocator(object):
                   event['eventInfo']['mag']] for event in meta]
 
         df = pd.DataFrame(data, columns=['index', 'timestamp', 'lat', 'dlat', 'lon', 'dlon', 'dep', 'ddep', 'mag']).set_index('index')
-
-        # write
-        if format == "csv":
-            outfile = os.path.join(self.master.outdir, "picks_located.csv")
-            df.to_csv(outfile, sep=",", header=True, index=True)
-        elif format == "txt":
-            outfile = os.path.join(self.master.outdir, "picks_located.txt")
-            df.to_csv(outfile, sep=" ", header=False, index=False)
+        return df

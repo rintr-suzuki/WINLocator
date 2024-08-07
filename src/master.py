@@ -45,6 +45,12 @@ class MasterConfig(object):
 class Config(object):
     def __init__(self, masterConfig, n):
         self.master = masterConfig
+        self.n = n
+
+        self.file_day = 'all'
+        self.out_dir_header = os.path.join(self.master.windir, 'out-%s' % self.n)
+        self.out_dir = os.path.join(self.out_dir_header, self.file_day)
+        os.makedirs(self.out_dir, exist_ok=True)
 
         ## make win parameter file
         self.prmfile = os.path.join(self.master.tmpdir, 'win.prm')
@@ -53,7 +59,7 @@ class Config(object):
         lines.append("") #/* default directory for data file */
         lines.append(self.master.chtbl) #/* channel table */
         lines.append("") #/* zone file */
-        lines.append(self.master.windir) #/* picks directory */
+        lines.append(self.out_dir) #/* picks directory */
         lines.append(self.master.locator) #/* hypomh program */	
         lines.append(self.master.velfile) #/* structure model */
         lines.append("") #/* map file */
@@ -70,18 +76,6 @@ class Config(object):
         with open(self.prmfile, 'w') as f:
             f.writelines("\n".join(lines))
 
-    def set_fname(self, fname):
-        self.fname = fname
-        self.baseFname = os.path.basename(self.fname)
-
-    def set_in(self, n):
-        self.indir = self.master.indir
-        # self.indir = os.path.join(self.master.indir, 'win')
-        self.files = glob.glob(os.path.join(self.indir, '*'))
-
-    def set_out(self, n):
-        self.outcsv = "trg_located-%s.csv" % n
-
 class MasterProcess(object):
     def __init__(self, config):
         self.config = config
@@ -92,6 +86,12 @@ class MasterProcess(object):
         l = []
         for s in ext:
             l += glob.glob(self.config.tmpdir + "/**/*.%s" % s, recursive=True)
+        for file in l:
+            os.remove(file)
+            # print(file)
+    
+    def rm_old(self):
+        l = glob.glob(self.config.windir + "/**/??????.??????-???", recursive=True)
         for file in l:
             os.remove(file)
             # print(file)

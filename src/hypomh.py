@@ -35,7 +35,7 @@ def read_args():
     # parser.add_argument('--dotime', type=float, default=2, help='(6)origin time error: default=2[sec]')
 
     # # step of hypomh
-    parser.add_argument('--itr_hypo', type=int, default=1, help='number of relocation')
+    parser.add_argument('--itr_hypo', type=int, default=3, help='number of relocation')
     
     # # multi-thread processing
     # parser.add_argument('--thread', type=int, help='number of thread (default: multiprocessing.cpu_count()*0.6)')
@@ -49,32 +49,25 @@ def main(params):
     masterConfig = MasterConfig(params)
     masterProcess = MasterProcess(masterConfig)
 
-    masterConfig.itr_hypo = 1 # todo
+    # init
+    # masterConfig.itr_hypo = 1 # todo
+    eventConverter = EventConverter(masterConfig)
+    winLocator = WINLocator(masterConfig)
+
+    # remove old file
+    masterProcess.rm_old()
+
     for n in range(masterConfig.itr_hypo):
-        if n == 0:
-            # init
-            config = Config(masterConfig, n)
-            eventConverter = EventConverter(config)
+        config = Config(masterConfig, n)
 
-            # json->txt
-            eventConverter.convertFromJson()
-        else:
-            # json->txt # todo
-            eventConverter.convertFromJson(winLocator)
+        # json->txt
+        eventConverter.convertFromJson(config, winLocator)
 
-        winLocator = WINLocator(eventConverter, config)
-        winLocator.locate()
+        # txt->win->txt
+        winLocator.locate(config, eventConverter)
 
-        winLocator.convert2dict(n)
-
-        if 'csv' in masterConfig.format:
-            winLocator.convert2csv('csv', n)
-
-        if 'json' in masterConfig.format:
-            winLocator.convert2json(n)
-
-        if 'txt' in masterConfig.format:
-            winLocator.convert2csv('txt', n)
+        # txt->json
+        winLocator.convert2json(config)
 
     # remove tmp file
     masterProcess.rm_tmp()

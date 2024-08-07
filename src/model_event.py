@@ -71,12 +71,14 @@ class EventInfo(object):
 
             self.event["hour"] = event[0][4].zfill(2)
             self.event["minute"] = event[0][5]
-            self.event["second"] = event[0][6]
+            self.event["second"] = float(event[0][6])
 
             event_timestamp_str = self.event["year"] + self.event["month"] + self.event["day"] + " " \
-                + self.event["hour"] + self.event["minute"] + self.event["second"]
-            event_timestamp_dt = datetime.datetime.strptime(event_timestamp_str, '%y%m%d %H%M%S.%f')
+                + self.event["hour"] + self.event["minute"]
+            event_timestamp_dt = datetime.datetime.strptime(event_timestamp_str, '%y%m%d %H%M') \
+                + datetime.timedelta(seconds=self.event["second"])
             self.event["timestamp"] = event_timestamp_dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+            print(self.event["timestamp"])
 
             self.event["lat"] = float(event[0][7])
             self.event["lon"] = float(event[0][8])
