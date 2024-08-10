@@ -15,8 +15,8 @@ class EventConverter(object):
         n = config.n
 
         ## input
-        pres = self.master.res[0]
-        sres = self.master.res[1]
+        pres = config.res[0]
+        sres = config.res[1]
 
         ## output
         # file_day = config.file_day
@@ -33,6 +33,7 @@ class EventConverter(object):
                         picksInfoNew.append(sub_item)
                     elif (sub_item['type'] == "s") and (abs(sub_item['residual']) <= sres):
                         picksInfoNew.append(sub_item)
+                #print(picksInfoNew)
                 if len(picksInfoNew) >= 4:
                     # at least 4 picks are needed to locate
                     self.eventInfoList.append(EventInfo(item.event_index, item.event, picksInfoNew, "json"))

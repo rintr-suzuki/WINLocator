@@ -126,9 +126,17 @@ class EventInfo(object):
             for rawpick in picks:
                 ppick = {}; spick = {}
                 ppick["time"] = float(rawpick[7])
-                spick["time"] = float(rawpick[10])
+                ppick["accuracy"] = float(rawpick[8])
+                ppick["residual"] = float(rawpick[9])
 
-                if ppick["time"] > float(self.event["second"]):
+                spick["time"] = float(rawpick[10])
+                spick["accuracy"] = float(rawpick[11])
+                spick["residual"] = float(rawpick[12])
+
+                if self.__writeflag(self.event, ppick):
+                    if self.event["second"] < 0: # revice pick if event second < 0
+                        ppick["time"] += -self.event["second"]
+
                     ppick["id"] = rawpick[1]
                     ppick["pol"] = rawpick[2]
 
@@ -143,14 +151,14 @@ class EventInfo(object):
                         - datetime.timedelta(seconds=float(self.event["second"])) + datetime.timedelta(seconds=ppick["time"])
                     ppick["timestamp"] = ppick_timestamp_dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
 
-                    ppick["accuracy"] = float(rawpick[8])
-                    ppick["residual"] = float(rawpick[9])
-
                     ppick["amp"] = float(rawpick[13])
                     ppick["mag"] = float(rawpick[14])
                     self.picks.append(ppick)
 
-                if float(spick["time"]) > float(self.event["second"]):
+                if self.__writeflag(self.event, spick):
+                    if self.event["second"] < 0: # revice pick if event second < 0
+                        spick["time"] += -self.event["second"]
+
                     spick["id"] = rawpick[1]
                     spick["pol"] = rawpick[2]
 
@@ -164,9 +172,6 @@ class EventInfo(object):
                     spick_timestamp_dt = event_timestamp_dt \
                         - datetime.timedelta(seconds=float(self.event["second"])) + datetime.timedelta(seconds=spick["time"])
                     spick["timestamp"] = spick_timestamp_dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
-
-                    spick["accuracy"] = float(rawpick[11])
-                    spick["residual"] = float(rawpick[12])
 
                     spick["amp"] = float(rawpick[13])
                     spick["mag"] = float(rawpick[14])
@@ -271,3 +276,15 @@ class EventInfo(object):
             f.write(p1)
             f.write(p2)
             f.writelines(p3_list)
+
+    def __writeflag(self, event, pick):
+        flag = False
+        if float(event["second"]) >= 0:
+            if (pick["time"] > float(event["second"])):
+                flag = True
+        else:
+            # delete dammy pick in case of self.event["second"] < 0
+            if not ((pick["time"] == 0) and \
+            (pick["accuracy"] == 0) and (pick["residual"] == 0)):
+                flag = True
+        return flag
