@@ -15,15 +15,15 @@ class EventConverter(object):
         n = config.n
 
         ## input
-        pres = self.master.res[n-1][0]
-        sres = self.master.res[n-1][1]
+        pres = self.master.res[0]
+        sres = self.master.res[1]
 
         ## output
         # file_day = config.file_day
         out_dir = config.out_dir
 
         # read input
-        if n-1 >= 0:
+        if n >= 1:
             eventInfoList0 = winLocator.eventInfoLists[n-1]
             self.eventInfoList = []
             for item in eventInfoList0:
@@ -33,18 +33,19 @@ class EventConverter(object):
                         picksInfoNew.append(sub_item)
                     elif (sub_item['type'] == "s") and (abs(sub_item['residual']) <= sres):
                         picksInfoNew.append(sub_item)
-                self.eventInfoList.append(EventInfo(item.event_index, item.event, picksInfoNew, "json"))
+                if len(picksInfoNew) >= 4:
+                    # at least 4 picks are needed to locate
+                    self.eventInfoList.append(EventInfo(item.event_index, item.event, picksInfoNew, "json"))
 
-        elif n-1 < 0:
+        elif n == 0:
             self.infile = self.master.infile
             with open(self.infile) as f:
                 meta = json.load(f)
 
             self.eventInfoList = [EventInfo(eventInfo["index"], eventInfo["eventInfo"], eventInfo["picksInfo"], "json") for eventInfo in meta]
-        
-        # else:
-        #     print("[INFO]: There is no event to locate")
-        #     exit()
+            if len(self.eventInfoList) == 0:
+                print("[ERROR]: Number of input events is 0. Input 1 event data at least.")
+                exit()   
 
         # write picks
         for eventInfo in self.eventInfoList:

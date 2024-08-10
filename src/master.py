@@ -76,6 +76,23 @@ class Config(object):
         with open(self.prmfile, 'w') as f:
             f.writelines("\n".join(lines))
 
+        # if set several th
+        if type(self.master.res[0]) == list:
+            if len(self.master.res) == self.master.itr_hypo - 1:
+                self.res = self.master.res[self.n-1]
+            else:
+                print("[Error]: --res format is not proper. \
+                      For example, 2 sets of thresholds are required for a 3 iteration process, like '5-10,1-2'. \
+                      Alternatively, common set of thresholds can be set like '5-10'.")
+        elif type(self.master.res[0]) == int:
+            if len(self.master.res) == 2:
+                self.res = self.master.res
+            else:
+                print("[Error]: --res format is not proper. Required 2 values, like '5-10', but given %s. \
+                      Alternatively, individual sets of thresholds can be set like '5-10,1-2'." % len(self.master.res))
+        else:
+            print("[Error]: --res format is not proper. Must be like '5-10,1-2' or '5-10'.")
+
 class MasterProcess(object):
     def __init__(self, config):
         self.config = config
