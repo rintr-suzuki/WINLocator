@@ -55,7 +55,7 @@ Detailed usage for WINLocator
 ```
 # Pull docker image (only once), run the 'hypomh' container and then execute WINLocator on the container environment. *1
 # Stop and delete the container environment after execution is complete.
-$ ./WINLocator.bash --infile INFILE [--format FORMAT]
+$ ./WINLocator.bash --infile INFILE [--format FORMAT] [--res RES] [--itr_hypo ITR_HYPO]
 # e.g. 
 # $ ./WINLocator.bash --infile data/associated_picks.json --format txt,json
 
