@@ -46,6 +46,8 @@ Detailed usage for WINLocator
   | --- | --- |
   | `--infile INFILE` | path of input associated-picks json file |
   | `[--format FORMAT]` | output format, multiple specifications separated by commas (default: csv) |
+  | `[--res RES]` | (Valid for itr_hypo=2 or more) Threshold of the P,S-wave travel time residuals on relocation connected by hyphens. <br> Picks with larger residuals than this threshold are excluded from the following iteration. <br> It can be set for each iteration by separating them with commas. (default: 5-10,1-2) |
+  | `[--itr_hypo ITR_HYPO]` | Number of relocation process iterations. <br> After 2nd relocation, remaining picks are used, excluding the picks with larger residuals than "--res" values. (default: 3) |
 
 * Use `-h` option for the detailed information of all other options.
 

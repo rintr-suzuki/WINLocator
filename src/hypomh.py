@@ -30,8 +30,9 @@ def read_args():
 
     # # param for hypo limitation
     # parser.add_argument('--min_merge', type=float, default=5, help='min_merge: default=3[sec]')
-    parser.add_argument('--res', type=tp2, default=[[5, 10], [1, 2]], help='minimum residuals of the P-wave travel time residuals: default=5(for first drop),1(for second drop and after)[sec]')
-    # parser.add_argument('--s_res_pick', type=tp1, default=[10, 2], help='minimum residuals of the S-wave travel time residuals: default=10(for first drop),2(for second drop and after)[sec]')
+    parser.add_argument('--res', type=tp2, default=[[5, 10], [1, 2]], help='(Valid for itr_hypo=2 or more) Threshold of the P,S-wave travel time residuals on relocation connected by hyphens. \
+                        Picks with larger residuals than this threshold are excluded from the following iteration. \
+                        It can be set for each iteration by separating them with commas. (default: 5-10,1-2)')
 
     # # default is from Tamaribuchi et al., 2021
     # parser.add_argument('--pspicknear', type=int, default=5, help='(1)sum of the number of P- and S-phases at "nearstn" stations near the epicenter: default=5')
@@ -46,7 +47,8 @@ def read_args():
     # parser.add_argument('--dotime', type=float, default=2, help='(6)origin time error: default=2[sec]')
 
     # # step of hypomh
-    parser.add_argument('--itr_hypo', type=int, default=3, help='number of relocation')
+    parser.add_argument('--itr_hypo', type=int, default=3, help='Number of relocation process iterations. \
+                        After 2nd relocation, remaining picks are used, excluding the picks with larger residuals than "--res" values. (default: 3)')
     
     # # multi-thread processing
     # parser.add_argument('--thread', type=int, help='number of thread (default: multiprocessing.cpu_count()*0.6)')
