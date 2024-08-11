@@ -29,7 +29,7 @@ class StationTable(object):
             for raw in file:
                 columns = raw.split()[:18]
                 meta = " ".join(columns)
-                if not meta.startswith('#'): # delete comment line
+                if (meta.strip() != "") and (not meta.startswith('#')): # delete blank line and comment line
                     meta_list.append(meta)
         df = pd.DataFrame({0: meta_list})
 

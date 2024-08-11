@@ -30,6 +30,7 @@ class MasterConfig(object):
         stntbl.screeningTbl(self.tmpdir)
 
         self.stntbl = stntbl
+        self.chtbl = stntbl.chtbl
 
         # set format
         for format in self.format:
