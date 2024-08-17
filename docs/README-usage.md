@@ -12,6 +12,17 @@ Detailed usage for WINLocator
   * Csv and txt format has the minimum information to identify the hypocenter, while json format has all of "win pickfile" information, including pick information.
   * You can choose one or more format to output with `--format` option (default: csv only).
 
+* The final result is filtered with the threshold for the event.
+  * Default filtering rule is as the following: <br>
+    (1) Sum of the number of P- and S-phases at 20 stations near the epicenter: 5 or more (`--pspicknear`, `--nearstn`) <br>
+    (2)-1 Number of stations from which both the P- and S-phases are selected: 2 or more (`--bothps`) <br>
+    (2)-2 Number of stations from which at least the P-phases are selected: 10 or more (`--ppick`) <br>
+    (3) Root mean square of the P-wave travel time residuals: less than 0.9 sec (`--std_ditp`) <br>
+    (4) Root mean square of the S-wave travel time residuals: less than 1.4 sec (`--std_dits`) <br>
+    (5)-1 Latitude error: less than 17 km (`--dolat`) <br>
+    (5)-2 Longitude error: less than 17 km (`--dolon`) <br>
+  * The defaults are from Tamaribuchi et al., 2021, but (3) and (4) are empirically tuned. <br> (Originally, `--std_ditp`=0.6 and `--std_dits`=1.2)
+
 ## How to use
 ### 1. Input file preparation
 * output file of REALAssociator (associated_picks.json)
@@ -48,6 +59,7 @@ Detailed usage for WINLocator
   | `[--format FORMAT]` | output format, multiple specifications separated by commas (default: csv) |
   | `[--res RES]` | (Valid for itr_hypo=2 or more) Threshold of the P,S-wave travel time residuals on relocation connected by hyphens. <br> Picks with larger residuals than this threshold are excluded from the following iteration. <br> It can be set for each iteration by separating them with commas. (default: 5-10,1-2) |
   | `[--itr_hypo ITR_HYPO]` | Number of relocation process iterations. <br> After 2nd relocation, remaining picks are used, excluding the picks with larger residuals than "--res" values. (default: 3) |
+  | `[--mkEachJson]` | if set, output the results of each iteration to files (default: False) |
 
 * Use `-h` option for the detailed information of all other options.
 
@@ -55,7 +67,7 @@ Detailed usage for WINLocator
 ```
 # Pull docker image (only once), run the 'hypomh' container and then execute WINLocator on the container environment. *1
 # Stop and delete the container environment after execution is complete.
-$ ./WINLocator.bash --infile INFILE [--format FORMAT] [--res RES] [--itr_hypo ITR_HYPO]
+$ ./WINLocator.bash --infile INFILE [--format FORMAT] [--res RES] [--itr_hypo ITR_HYPO] [--mkEachJson]
 # e.g. 
 # $ ./WINLocator.bash --infile data/associated_picks.json --format txt,json
 

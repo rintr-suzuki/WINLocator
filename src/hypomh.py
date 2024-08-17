@@ -35,16 +35,16 @@ def read_args():
                         Picks with larger residuals than this threshold are excluded from the following iteration. \
                         It can be set for each iteration by separating them with commas. (default: 5-10,1-2)')
 
-    # Defaults are from Tamaribuchi et al., 2021, but "std_ditp" and "std_dits" are empirically tuned. (Originally, "std_ditp"=0.6 and "std_dits"=1.2)
-    parser.add_argument('--pspicknear', type=int, default=5, help='(1)sum of the number of P- and S-phases at "nearstn" stations near the epicenter: default=5')
-    parser.add_argument('--nearstn', type=int, default=20, help='(1)default=20')
-    parser.add_argument('--bothps', type=int, default=2, help='(2)number of stations from which both the P- and S-phases are selected: default=2')
-    parser.add_argument('--ppick', type=int, default=10, help='(2)number of stations from which at least the P-phases are selected: default=10')
+    # 
+    parser.add_argument('--pspicknear', type=int, default=5, help='(1) sum of the number of P- and S-phases at "nearstn" stations near the epicenter: default=5')
+    parser.add_argument('--nearstn', type=int, default=20, help='(1) default=20')
+    parser.add_argument('--bothps', type=int, default=2, help='(2)-1 number of stations from which both the P- and S-phases are selected: default=2')
+    parser.add_argument('--ppick', type=int, default=10, help='(2)-2 number of stations from which at least the P-phases are selected: default=10')
     parser.add_argument('--pspick', type=int, default=0, help='sum of the number of selected P- and S-phases: default=0')    
-    parser.add_argument('--std_ditp', type=float, default=0.9, help='(3)root mean square of the P-wave travel time residuals: default=0.6[sec]')
-    parser.add_argument('--std_dits', type=float, default=1.4, help='(4)root mean square of the S-wave travel time residuals: default=1.2[sec]')
-    parser.add_argument('--dolat', type=float, default=17, help='(5)latitude error: default=17[km]')
-    parser.add_argument('--dolon', type=float, default=17, help='(5)longitude error: default=17[km]')
+    parser.add_argument('--std_ditp', type=float, default=0.9, help='(3) root mean square of the P-wave travel time residuals: default=0.9[sec]')
+    parser.add_argument('--std_dits', type=float, default=1.4, help='(4) root mean square of the S-wave travel time residuals: default=1.4[sec]')
+    parser.add_argument('--dolat', type=float, default=17, help='(5)-1 latitude error: default=17[km]')
+    parser.add_argument('--dolon', type=float, default=17, help='(5)-2 longitude error: default=17[km]')
     # parser.add_argument('--dotime', type=float, default=2, help='(6)origin time error: default=2[sec]')
 
     # # step of hypomh

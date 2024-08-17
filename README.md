@@ -52,4 +52,5 @@
 
 ## References
 * Hasegawa, A., Umino, N., & Takagi, A. (1978), Double-planed structure of the deep seismic zone in the northeastern Japan arc. Tectonophysics, 47(1–2), 43–58. https://doi.org/10.1016/0040-1951(78)90150-6
+* Tamaribuchi, K., Hirose, F., Noda, A., Iwasaki, Y., Iwakiri, K., & Ueno, H. (2021), Noise classification for the unified earthquake catalog using ensemble learning: the enhanced image of seismic activity along the Japan Trench by the S-net seafloor network. Earth, Planets and Space, 73, 91. https://doi.org/10.1186/s40623-021-01411-6
 * Urabe, T., & Tsukada, S. (1992), win - A Workstation Program for Processing Waveform Data from Microearthquake Networks. Programme and Abstracts, the Seismological Society of Japan, 2, 331-331. (In Japanese)
