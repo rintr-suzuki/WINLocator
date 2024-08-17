@@ -23,27 +23,28 @@ def read_args():
 
     parser.add_argument('--outdir', help='path of output directory (default: dirname of infile)')
     parser.add_argument('--format', type=tp1, default=['csv'], help='output format, multiple specifications separated by commas (default: csv)')
+    parser.add_argument('--mkEachJson', action='store_true', help='if set, output the results of each iteration to files (default: False)')
 
     # channel table of station code
     parser.add_argument('--chtbl', default='etc/stn.tbl', help='channel table')
     parser.add_argument('--velfile', default='etc/struct.tbl', help='velocity structure file')
 
-    # # param for hypo limitation
+    # param for hypo limitation
     # parser.add_argument('--min_merge', type=float, default=5, help='min_merge: default=3[sec]')
     parser.add_argument('--res', type=tp2, default=[[5, 10], [1, 2]], help='(Valid for itr_hypo=2 or more) Threshold of the P,S-wave travel time residuals on relocation connected by hyphens. \
                         Picks with larger residuals than this threshold are excluded from the following iteration. \
                         It can be set for each iteration by separating them with commas. (default: 5-10,1-2)')
 
-    # # Defaults are from Tamaribuchi et al., 2021, but "std_ditp" and "std_dits" are empirically tuned. (Originally, "std_ditp"=0.6 and "std_dits"=1.2)
-    # parser.add_argument('--pspicknear', type=int, default=5, help='(1)sum of the number of P- and S-phases at "nearstn" stations near the epicenter: default=5')
-    # parser.add_argument('--nearstn', type=int, default=20, help='(1)default=20')
-    # parser.add_argument('--bothps', type=int, default=2, help='(2)number of stations from which both the P- and S-phases are selected: default=2')
-    # parser.add_argument('--ppick', type=int, default=10, help='(2)number of stations from which at least the P-phases are selected: default=10')
-    # parser.add_argument('--pspick', type=int, default=0, help='sum of the number of selected P- and S-phases: default=0')    
-    # parser.add_argument('--std_ditp', type=float, default=0.9, help='(3)root mean square of the P-wave travel time residuals: default=0.6[sec]')
-    # parser.add_argument('--std_dits', type=float, default=1.4, help='(4)root mean square of the S-wave travel time residuals: default=1.2[sec]')
-    # parser.add_argument('--dolat', type=float, default=17, help='(5)latitude error: default=17[km]')
-    # parser.add_argument('--dolon', type=float, default=17, help='(5)longitude error: default=17[km]')
+    # Defaults are from Tamaribuchi et al., 2021, but "std_ditp" and "std_dits" are empirically tuned. (Originally, "std_ditp"=0.6 and "std_dits"=1.2)
+    parser.add_argument('--pspicknear', type=int, default=5, help='(1)sum of the number of P- and S-phases at "nearstn" stations near the epicenter: default=5')
+    parser.add_argument('--nearstn', type=int, default=20, help='(1)default=20')
+    parser.add_argument('--bothps', type=int, default=2, help='(2)number of stations from which both the P- and S-phases are selected: default=2')
+    parser.add_argument('--ppick', type=int, default=10, help='(2)number of stations from which at least the P-phases are selected: default=10')
+    parser.add_argument('--pspick', type=int, default=0, help='sum of the number of selected P- and S-phases: default=0')    
+    parser.add_argument('--std_ditp', type=float, default=0.9, help='(3)root mean square of the P-wave travel time residuals: default=0.6[sec]')
+    parser.add_argument('--std_dits', type=float, default=1.4, help='(4)root mean square of the S-wave travel time residuals: default=1.2[sec]')
+    parser.add_argument('--dolat', type=float, default=17, help='(5)latitude error: default=17[km]')
+    parser.add_argument('--dolon', type=float, default=17, help='(5)longitude error: default=17[km]')
     # parser.add_argument('--dotime', type=float, default=2, help='(6)origin time error: default=2[sec]')
 
     # # step of hypomh

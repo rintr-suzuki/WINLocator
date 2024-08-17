@@ -1,5 +1,7 @@
 import datetime
 import os
+import collections
+import math
 
 class EventInfo(object):
     def __init__(self, i, event, picks, type):
@@ -277,6 +279,71 @@ class EventInfo(object):
             f.write(p2)
             f.writelines(p3_list)
 
+    def addPickCounts(self, stntbl=None, nearstn=20):
+        # self.event = {}
+        # self.picks = []
+        # lines_p3l = copy.deepcopy(line_l["p3l"])
+
+        # functions
+        ppick = lambda x: [pick["type"] == "p" for pick in x].count(True)
+        spick = lambda x: [pick["type"] == "s" for pick in x].count(True)
+        pspick = lambda x: len(x)
+
+        bothpick_stn = lambda x: [i == 2 for i in collections.Counter([pick["id"] for pick in x]).values()].count(True) # count picks with the same station id, 2 means P and S phase.
+        eitherpick_stn = lambda x: len(collections.Counter([pick["id"] for pick in x]).values())
+
+        # count picks
+        pickCounts = []
+        for func in [ppick, spick, pspick, bothpick_stn, eitherpick_stn]:
+            pickCounts.append(func(self.picks))
+        pickCountNames = ["nP", "nS", "nPorS", "nStn-PandS", "nStn-nPorS"]
+
+        # count picks only from near stations
+        # needs StationTable().chtbl_df
+        if stntbl is not None:
+            stntbl = stntbl.drop_duplicates(subset=3).copy() # delete with the same stn (3: id)
+            if len(stntbl) > nearstn:
+                stntbl['hypo_lat'] = self.event['lat']
+                stntbl['hypo_lon'] = self.event['lon']
+                stntbl['hypo_alt'] = -self.event['dep']
+                stntbl = stntbl.rename(columns={3: 'id'})
+                stntbl = stntbl.rename(columns={13: 'lat'})
+                stntbl = stntbl.rename(columns={14: 'lon'})
+                stntbl = stntbl.rename(columns={15: 'alt'})
+                stntbl['lat'] = stntbl['lat'].apply(float)
+                stntbl['lon'] = stntbl['lon'].apply(float)
+                stntbl['alt'] = stntbl['alt'].apply(float)/1000
+
+                stntbl['dist'] = stntbl.apply(self.__distance_with_altitude, axis=1)
+                nearstnlst = stntbl.sort_values('dist').reset_index(drop=True)['id'].values[0:nearstn]
+
+                picks_near = [pick for pick in self.picks if pick['id'] in nearstnlst]
+                # for pick in self.picks:
+                #     # 3: id, 13: lat, 14: lon
+                #     chtbl_onestn = stntbl[stntbl.iloc[:, 3] == pick['id']]
+                #     stn_lat = chtbl_onestn.iloc[0, 13]; stn_lon = chtbl_onestn.iloc[0, 14]; stn_alt = chtbl_onestn.iloc[0, 15]/1000
+                #     distance = self.distance_with_altitude(stn_lat, hypo_lon, hypo_alt, stn_lat, stn_lon, stn_alt)
+
+
+                # id_df["_lat"] = float(hypo[0]); id_df["_lon"] = float(hypo[1]); id_df["_dep"] = float(hypo[2]) # event location info
+                # id_df["dist"] = id_df.apply(cal_dist, axis=1)
+                # #print(id_df.sort_values("dist"))
+                
+                # #print(id_df)
+                # lines_p3l_near = [lines_p3 for lines_p3 in lines_p3l if lines_p3[1] in id_df]
+                # #print(lines_p3l_near)
+                for func in [ppick, spick, pspick, bothpick_stn, eitherpick_stn]:
+                    pickCounts.append(func(picks_near))
+            else:
+                # just copy counts if the number of stations is less than 20
+                pickCounts += pickCounts
+            pickCountNames += [name+"_nearonly" for name in pickCountNames]
+
+        # write counts
+        self.event["pickCounts"] = {}
+        for key, value in zip(pickCountNames, pickCounts):
+            self.event["pickCounts"][key] = value 
+
     def __writeflag(self, event, pick):
         flag = False
         if float(event["second"]) >= 0:
@@ -288,3 +355,35 @@ class EventInfo(object):
             (pick["accuracy"] == 0) and (pick["residual"] == 0)):
                 flag = True
         return flag
+
+    def __haversine_distance(self, lat1, lon1, lat2, lon2):
+        # 地球の半径（キロメートル）
+        R = 6371  
+
+        # 度をラジアンに変換
+        phi1 = math.radians(lat1)
+        phi2 = math.radians(lat2)
+        delta_phi = math.radians(lat2 - lat1)
+        delta_lambda = math.radians(lon2 - lon1)
+
+        # Haversineの公式
+        a = math.sin(delta_phi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda / 2) ** 2
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+        # 2点間の地表距離（km）
+        distance = R * c
+        return distance
+
+    def __distance_with_altitude(self, df):
+        lat1 = df['lat']; lon1 = df['lon']; alt1 = df['alt']
+        lat2 = df['hypo_lat']; lon2 = df['hypo_lon']; alt2 = df['hypo_alt']
+
+        # 2点間の地表距離を計算（km）
+        surface_distance = self.__haversine_distance(lat1, lon1, lat2, lon2)
+
+        # 高度差（km）
+        altitude_diff = alt2 - alt1
+
+        # ピタゴラスの定理で3次元の距離を計算
+        total_distance = math.sqrt(surface_distance**2 + altitude_diff**2)
+        return total_distance

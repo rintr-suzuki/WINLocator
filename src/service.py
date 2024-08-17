@@ -146,13 +146,20 @@ class WINLocator(object):
 
         # write json
         ## add to meta
-        metaone = [eventInfo.toJson() for eventInfo in self.eventInfoLists[n]]
+        metaone = self.eventInfoLists[n]
         self.meta.append(metaone)
 
         ## write output
-        if mkEachJson:
+        if self.master.mkEachJson:
             self.writeJson(n=config.n, format=self.master.format)
 
+        # select event after the last iteration
+        if n+1 == self.master.itr_hypo:
+            print("[WINLocator.convert2json]: Select hypo")
+            metaone_selected = self.__selectHypo(metaone, self.master)
+            self.meta.append(metaone_selected)
+
+        # write json
         self.writeJson(format=self.master.format)
 
     def writeJson(self, n=-1, format=['csv']):
@@ -160,12 +167,12 @@ class WINLocator(object):
         ## write each
         if n >= 0:
             outfilebase = "picks_located-%s" % n
-            outmeta = self.meta[n]
+            outmeta = [eventInfo.toJson() for eventInfo in self.meta[n]]
 
         ## write final
         elif n == -1:
             outfilebase = "picks_located"
-            outmeta = self.meta[-1]
+            outmeta = [eventInfo.toJson() for eventInfo in self.meta[-1]]
 
         # write in each format
         if 'csv' in format:
@@ -196,3 +203,24 @@ class WINLocator(object):
 
         df = pd.DataFrame(data, columns=['index', 'timestamp', 'lat', 'dlat', 'lon', 'dlon', 'dep', 'ddep', 'mag']).set_index('index')
         return df
+    
+    def __selectHypo(self, eventInfoList0, config):
+        eventInfoList =[]
+        for event in eventInfoList0:
+            event.addPickCounts(stntbl=config.stntbl.chtbl_df, nearstn=config.nearstn)
+            if self.__selectHypoFlag(event, config):
+                eventInfoList.append(event)
+        return eventInfoList
+    
+    def __selectHypoFlag(self, event, config):
+        flag = False
+        if (event.event["dlat"] < config.dolat) & \
+            (event.event["dlon"] < config.dolon) & \
+            (event.event["stdPResidual"] < config.std_ditp) & \
+            (event.event["stdSResidual"] < config.std_dits) & \
+            (event.event["pickCounts"]["nPorS_nearonly"] >= config.pspicknear) & \
+            (event.event["pickCounts"]["nStn-PandS"] >= config.bothps) & \
+            (event.event["pickCounts"]["nP"] >= config.ppick) & \
+            (event.event["pickCounts"]["nPorS"] >= config.pspick):
+            flag = True
+        return flag
