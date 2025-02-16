@@ -47,9 +47,15 @@ def read_args():
     parser.add_argument('--dolon', type=float, default=17, help='(5)-2 longitude error: default=17[km]')
     # parser.add_argument('--dotime', type=float, default=2, help='(6)origin time error: default=2[sec]')
 
-    # # step of hypomh
+    # step of hypomh
     parser.add_argument('--itr_hypo', type=int, default=3, help='Number of relocation process iterations. \
                         After 2nd relocation, remaining picks are used, excluding the picks with larger residuals than "--res" values. (default: 3)')
+    
+    # select event
+    parser.add_argument('--rm_duplicate', action='store_true', help='if set, delete split events due to miss association (default: False)')
+    parser.add_argument('--dupotime', type=float, default=1.0, help='time residuals of origin time to define split events: default=1.0[sec]')
+    parser.add_argument('--dupolat', type=float, default=0.15, help='latitude residuals to define split events: default=0.15[deg]')
+    parser.add_argument('--dupolon', type=float, default=0.15, help='longitude residuals to define split events: default=0.15[deg]')    
     
     # # multi-thread processing
     # parser.add_argument('--thread', type=int, help='number of thread (default: multiprocessing.cpu_count()*0.6)')

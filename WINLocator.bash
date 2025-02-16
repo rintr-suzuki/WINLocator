@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ## def names
-image_name='hypomh'; tag_name='v1.1-base'
+image_name='hypomh'; tag_name='v1.2-base'
 container_name='hypomh-1'
 app_name='python3 src/hypomh.py'
 

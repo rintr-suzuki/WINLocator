@@ -2,6 +2,8 @@ import os
 import json
 import pandas as pd
 import subprocess as sp
+from scipy.spatial import cKDTree
+from tqdm import tqdm
 
 from model_event import EventInfo
 
@@ -137,7 +139,7 @@ class WINLocator(object):
                 eventInfoList.append(EventInfo(i, event, picks, "win"))
         self.eventInfoLists.append(eventInfoList)
         
-    def convert2json(self, config, mkEachJson=False):
+    def convert2json(self, config):
         ## itr
         n = config.n
 
@@ -153,14 +155,21 @@ class WINLocator(object):
         if self.master.mkEachJson:
             self.writeJson(n=config.n, format=self.master.format)
 
-        # select event after the last iteration
+        ## select event after the last iteration
         if n+1 == self.master.itr_hypo:
             print("[WINLocator.convert2json]: Select hypo")
-            metaone_selected = self.__selectHypo(metaone, self.master)
+            metaone_selected0 = self.__selectHypo(metaone, self.master)
+            
+            if self.master.rm_duplicate:
+                print("[WINLocator.convert2json]: Remove duplicated hypo")
+                metaone_selected = self.__removeDuplicate(metaone_selected0)
+            else:
+                metaone_selected = metaone_selected0
+
             self.meta.append(metaone_selected)
 
-        # write json
-        self.writeJson(format=self.master.format)
+            # write json
+            self.writeJson(format=self.master.format)
 
     def writeJson(self, n=-1, format=['csv']):
         # select meta
@@ -224,3 +233,95 @@ class WINLocator(object):
             (event.event["pickCounts"]["nPorS"] >= config.pspick):
             flag = True
         return flag
+    
+    def __removeDuplicate(self, eventInfoList0):
+        # CSVファイルの読み込み
+        # TODO: eventInfoList0をdict型のまま処理する
+        catalogmeta = [eventInfo.toJson() for eventInfo in eventInfoList0]
+        df = self.__extractInfo2(catalogmeta)
+
+        # グループを取得
+        grouped_indices = self.__group_rows(df, self.master.dupotime, self.master.dupolat, self.master.dupolon)
+
+        # 抜き出された行の処理
+        ## 処理前のdfをコピー
+        remaining_rows = df.copy()
+
+        ## 重複イベントを削除
+        processed_rows = []
+        for group in tqdm(grouped_indices, desc="Processing groups"):
+            # 各重複イベントグループ(サブセット)に対して処理
+            sub_df = df.loc[group]
+            # サブセットのうち検測値数が最も多いもののみ残して削除
+            max_pspick = sub_df.loc[sub_df['nPorS'].idxmax()]
+            updated_row = max_pspick.copy()
+            processed_rows.append(updated_row)
+            # 上記で処理された行を削除
+            remaining_rows.drop(group, inplace=True)
+        df_processed = pd.DataFrame(processed_rows)
+
+        # 重複イベント候補とならなかったものと結合
+        df_final = pd.concat([remaining_rows, df_processed]).sort_values(by="timestamp")
+
+        # df_finalのindexだけ抜き出す
+        eventInfoList = [eventInfo for eventInfo in eventInfoList0 if eventInfo.event_index in df_final.index]
+        return eventInfoList
+
+    def __extractInfo2(self, meta):
+        data = []
+        data += [[event['index'], event['eventInfo']['timestamp'], \
+                    event['eventInfo']['lat'], \
+                    event['eventInfo']['lon'], \
+                    event['eventInfo']['dep'], \
+                    event['eventInfo']['mag'], \
+                    event['eventInfo']['pickCounts']['nPorS']] for event in meta]
+
+        df = pd.DataFrame(data, columns=['index', 'timestamp', 'lat', 'lon', 'dep', 'mag', 'nPorS']).set_index('index')
+        df['timestamp'] = pd.to_datetime(df['timestamp'])
+        return df
+
+    # 条件に基づく行のグループ化
+    def __group_rows(self, df, tdth, latdth, londth):
+        # 2イベントの組に対して、緩い条件を満たすものを網羅探索する (同じindexが複数回利用されることあり)
+        coords = df[["timestamp", "lat", "lon"]].copy()
+        coords["timestamp"] = coords["timestamp"].astype(int) // 10**9  # 秒単位に変換
+        tree = cKDTree(coords.values)
+        pairs = tree.query_pairs(r=(tdth+latdth+londth+0.01), p=1)  # 合計+少しの誤差範囲で検索
+        
+        # 小さい要素の昇順ソート
+        normalized_pairs = [(min(i, j), max(i, j)) for i, j in pairs]
+        sorted_pairs = sorted(normalized_pairs, key=lambda pair: pair[0])
+
+        grouped = []
+        used_indices = set()
+
+        # 2イベントの組をベースに時刻順に精査
+        for i, j in tqdm(sorted_pairs, desc="Grouping rows"):
+            # 時刻順に検索して、既にindexが重複イベント該当済のものは除外
+            if df.index[i] in used_indices or df.index[j] in used_indices:
+                continue
+
+            # まず2イベントの組が正確に条件を満たすか確認
+            time_diff = abs((df.loc[df.index[i], "timestamp"] - df.loc[df.index[j], "timestamp"]).total_seconds())
+            lat_diff = abs(df.loc[df.index[i], "lat"] - df.loc[df.index[j], "lat"])
+            lon_diff = abs(df.loc[df.index[i], "lon"] - df.loc[df.index[j], "lon"])
+            
+            if time_diff > tdth or lat_diff > latdth or lon_diff > londth:
+                continue  # iとjが条件を満たしていない場合は除外
+
+            group = {df.index[i], df.index[j]}
+            for k in range(len(df)):
+                # 時刻順に検索して、既にindexが重複イベント該当済のものは除外
+                if df.index[k] in group or df.index[k] in used_indices:
+                    continue
+
+                # 3イベント目を探す
+                time_diff = abs((df.loc[df.index[i], "timestamp"] - df.loc[df.index[k], "timestamp"]).total_seconds())
+                lat_diff = abs(df.loc[df.index[i], "lat"] - df.loc[df.index[k], "lat"])
+                lon_diff = abs(df.loc[df.index[i], "lon"] - df.loc[df.index[k], "lon"])
+                if time_diff <= tdth and lat_diff <= latdth and lon_diff <= londth:
+                    group.add(df.index[k])
+            grouped.append(list(group))
+            used_indices.update(group)
+        
+        return grouped

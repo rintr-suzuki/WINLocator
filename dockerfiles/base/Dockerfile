@@ -25,6 +25,7 @@ ENV PATH $PATH:/usr/local/src/win/bin
 WORKDIR /usr/local/src/
 RUN pip3 install pandas
 RUN pip3 install tqdm
+RUN pip3 install scipy
 
 WORKDIR /data/hypomh
 
