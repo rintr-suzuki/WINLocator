@@ -23,6 +23,9 @@ Detailed usage for WINLocator
     (5)-2 Longitude error: less than 17 km (`--dolon`) <br>
   * The defaults are from Tamaribuchi et al., 2021, but (3) and (4) are empirically tuned. <br> (Originally, `--std_ditp`=0.6 and `--std_dits`=1.2)
 
+* Also, `--rm_duplicate` option can exclude events that occurred almost simultaneously (default: within 1 second difference in origin time) and at the same location (default: within 0.15 degree difference in latitude and longitude of epicenter), leaving only the single event with the highest number of assosiated picks on the event. <br>
+This option is useful for removing erroneously divided into two or more events during association.
+
 ## How to use
 ### 1. Input file preparation
 * output file of REALAssociator (associated_picks.json)
@@ -60,6 +63,7 @@ Detailed usage for WINLocator
   | `[--res RES]` | (Valid for itr_hypo=2 or more) Threshold of the P,S-wave travel time residuals on relocation connected by hyphens. <br> Picks with larger residuals than this threshold are excluded from the following iteration. <br> It can be set for each iteration by separating them with commas. (default: 5-10,1-2) |
   | `[--itr_hypo ITR_HYPO]` | Number of relocation process iterations. <br> After 2nd relocation, remaining picks are used, excluding the picks with larger residuals than "--res" values. (default: 3) |
   | `[--mkEachJson]` | if set, output the results of each iteration to files (default: False) |
+  | `[--rm_duplicate]` | if set, delete split events due to miss association (default: False) |
 
 * Use `-h` option for the detailed information of all other options.
 
@@ -67,9 +71,9 @@ Detailed usage for WINLocator
 ```
 # Pull docker image (only once), run the 'hypomh' container and then execute WINLocator on the container environment. *1
 # Stop and delete the container environment after execution is complete.
-$ ./WINLocator.bash --infile INFILE [--format FORMAT] [--res RES] [--itr_hypo ITR_HYPO] [--mkEachJson]
+$ ./WINLocator.bash --infile INFILE [--format FORMAT] [--res RES] [--itr_hypo ITR_HYPO] [--mkEachJson] [--rm_duplicate]
 # e.g. 
-# $ ./WINLocator.bash --infile data/associated_picks.json --format txt,json
+# $ ./WINLocator.bash --infile data/associated_picks.json --format txt,json --rm_duplicate
 
 # You can find the output of WINLocator in '<dirname of infile>' directory.
 ```
