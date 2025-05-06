@@ -38,9 +38,9 @@ This option is useful for removing erroneously divided into two or more events d
   * format: txt format <br>
     For the detailed information, see https://wwweic.eri.u-tokyo.ac.jp/WIN/man.ja/win.html (only in Japanese).
   * **Only support the following "component code (column [5])"**. <br>
-    -Vertical compornent: EW,E,X,VX <br>
-    -Horizontal compornent 1: NS,N,Y,VY <br>
-    -Horizontal compornent 2: UD,U,Z,VZ
+    -Vertical component: EW,E,X,VX <br>
+    -Horizontal component 1: NS,N,Y,VY <br>
+    -Horizontal component 2: UD,U,Z,VZ
   * **"Voltage amplification ratio (column [12])" is modified to the int value.**
   * NIED provides channel table at the same time when downloading WIN waveform files. <br>
     For the detailed information, see https://hinetwww11.bosai.go.jp/auth/download/cont/?LANG=en
