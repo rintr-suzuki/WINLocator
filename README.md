@@ -1,6 +1,8 @@
 # WINLocator
 ## Summary
 
+[![DOI](https://img.shields.io/badge/DOI-10.1126%2Fscience.adt6389-blue)](https://doi.org/10.1126/science.adt6389)
+
 ![](docs/assets/WINLocator_overview.png)
  
 * Tool to do hypocenter location from associated phases by WIN system (Urabe and Tsukada, 1992).
